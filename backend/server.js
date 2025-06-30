@@ -5,6 +5,9 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 // Initialize Express app
 const app = express();
@@ -18,6 +21,22 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // --- Static File Serving ---
 // Serve frontend files directly from the 'frontend' directory
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
+
+// Serve Firebase configuration based on environment variables
+const firebaseConfig = {
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.FIREBASE_APP_ID,
+    measurementId: process.env.FIREBASE_MEASUREMENT_ID
+};
+
+app.get('/config.js', (req, res) => {
+    res.type('application/javascript');
+    res.send(`window.firebaseConfig = ${JSON.stringify(firebaseConfig)};`);
+});
 
 // Directory for uploaded files (e.g., vendor certifications)
 const uploadsDir = path.join(__dirname, 'uploads'); 
