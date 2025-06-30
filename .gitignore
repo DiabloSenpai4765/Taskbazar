@@ -1,0 +1,10 @@
+node_modules/
+backend/uploads/
+
+# Node logs
+npm-debug.log*
+**/npm-debug.log*
+
+# OS files
+.DS_Store
+
