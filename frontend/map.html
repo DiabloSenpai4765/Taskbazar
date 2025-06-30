@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TaskBazar — Live Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+  />
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-o9N1j6Nkx3KMDR+YkORxxAQ4bt8XgCkxoMah/Z4hYMw="
+    crossorigin=""
+  />
+
+  <!-- Your core CSS -->
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    #map { height: calc(100% - 112px); width: 100%; } /* space for filter + footer */
+    .filter-bar {
+      height: 56px;
+      display: flex;
+      background: #fff;
+      align-items: center;
+      padding: 0 1rem;
+      gap: 0.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .filter-btn {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fafafa;
+      cursor: pointer;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    .filter-btn.active {
+      background: #d6b3ff;
+      border-color: #a77cff;
+    }
+    .bottom-nav {
+      height: 56px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: #fff;
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    }
+    .bottom-nav a {
+      text-decoration: none;
+      color: inherit;
+      font-size: 1.4rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="filter-btn active" data-category="all">
+      <i class="bi bi-grid-fill"></i> All
+    </div>
+    <div class="filter-btn" data-category="electricians">
+      <i class="bi bi-lightning-fill"></i> Electricians
+    </div>
+    <div class="filter-btn" data-category="plumbers">
+      <i class="bi bi-wrench-adjustable-circle-fill"></i> Plumbers
+    </div>
+    <div class="filter-btn" data-category="handymen">
+      <i class="bi bi-hammer"></i> Handymen
+    </div>
+    <div class="filter-btn" data-category="vegetables">
+      <i class="bi bi-basket3-fill"></i> Vegetables
+    </div>
+  </div>
+
+  <!-- Map Container -->
+  <div id="map"></div>
+
+  <!-- Footer Nav -->
+  <footer class="bottom-nav">
+    <a href="index.html" title="Home"><i class="bi bi-house-door-fill"></i></a>
+    <a href="vendors.html" title="Services"><i class="bi bi-search"></i></a>
+    <a href="bookings.html" title="My Bookings"><i class="bi bi-check2-square"></i></a>
+    <a href="map.html" title="Map"><i class="bi bi-geo-alt-fill"></i></a>
+    <a href="profile.html" title="Profile"><i class="bi bi-person-fill"></i></a>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-oC4Xnb3jxQENXcL6xbQN2u1zGEU9q3v/38zeA6pJDrM="
+    crossorigin=""
+  ></script>
+
+  <script>
+    let map, userMarker, serviceMarkers = [], allVendors = [];
+
+    // Initialize the map
+    function initMap() {
+      map = L.map('map').setView([31.5204, 74.3587], 13);
+
+      // OSM tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      // User geolocation
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const userPos = [pos.coords.latitude, pos.coords.longitude];
+          map.setView(userPos, 14);
+          userMarker = L.marker(userPos, {
+            icon: L.icon({
+              iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+              iconSize: [32, 32]
+            })
+          }).addTo(map).bindPopup('You are here').openPopup();
+          fetchVendors();
+        }, () => fetchVendors());
+      } else {
+        fetchVendors();
+      }
+    }
+
+    // Fetch vendor data
+    async function fetchVendors() {
+      try {
+        const res = await fetch('/api/vendors');
+        allVendors = await res.json();
+        placeMarkers(allVendors);
+      } catch (err) {
+        console.error('Error fetching vendors:', err);
+      }
+    }
+
+    // Draw vendor markers
+    function placeMarkers(vendors) {
+      serviceMarkers.forEach(m => map.removeLayer(m));
+      serviceMarkers = [];
+
+      vendors.forEach(v => {
+        if (!v.latitude || !v.longitude) return;
+        const m = L.marker([v.latitude, v.longitude])
+          .addTo(map)
+          .bindPopup(`<strong>${v.name}</strong><br/>${v.category}`);
+        serviceMarkers.push(m);
+      });
+    }
+
+    // Set up filters
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const cat = btn.dataset.category;
+          const list = cat === 'all'
+            ? allVendors
+            : allVendors.filter(v => v.category === cat);
+          placeMarkers(list);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vendor Login/Register - TaskBazaar</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: #f1e3fc;
+    }
+
+    .login-container {
+      max-width: 420px;
+      margin: 80px auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 30px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+    }
+
+    .login-tabs {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 25px;
+    }
+
+    .login-tabs button {
+      flex: 1;
+      padding: 12px;
+      font-weight: bold;
+      border: none;
+      background: #f5f3ff;
+      color: #5e0055;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .login-tabs button.active {
+      border-bottom: 3px solid #5e0055;
+      background: #fff;
+    }
+
+    .form-section {
+      display: none;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    form input, form select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 18px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(to right, #c183c8, #d196c2);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .login-btn:hover {
+      background: linear-gradient(to right, #a86edb, #f0aee0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-tabs">
+      <button id="loginTab" class="active">Login</button>
+      <button id="registerTab">Register</button>
+    </div>
+
+    <!-- 🔐 Login Form -->
+    <div id="loginForm" class="form-section active">
+      <form onsubmit="event.preventDefault(); alert('Logged in successfully!');">
+        <input type="email" placeholder="Email" required />
+        <input type="password" placeholder="Password" required />
+        <button type="submit" class="login-btn">Login</button>
+      </form>
+    </div>
+
+    <!-- 📝 Register Form -->
+    <div id="registerForm" class="form-section">
+      <form onsubmit="event.preventDefault(); saveNameAndRedirect();">
+        <input type="text" id="name" placeholder="Full Name" required />
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" placeholder="Create Password" required />
+        <input type="tel" id="contact" placeholder="Contact Number" required />
+        <select id="service" required>
+          <option value="">Select Service Type</option>
+          <option value="Vegetable Seller">Vegetable Seller</option>
+          <option value="Electrician">Electrician</option>
+          <option value="Plumber">Plumber</option>
+          <option value="Handyman">Handyman</option>
+        </select>
+        <button type="submit" class="login-btn">Register</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  document.querySelector('#registerForm form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const fullName = this.querySelector('input[placeholder="Full Name"]').value;
+    const email = this.querySelector('input[placeholder="Email"]').value;
+    const password = this.querySelector('input[placeholder="Create Password"]').value;
+    const contact = this.querySelector('input[placeholder="Contact Number"]').value;
+    const service = this.querySelector('select').value;
+
+    const vendor = {
+      name: fullName,
+      email,
+      password,
+      contact,
+      service,
+      location: "Unknown",
+      image: "https://via.placeholder.com/150?text=" + encodeURIComponent(service)
+    };
+
+    try {
+      const res = await fetch("http://localhost:3000/register-vendor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(vendor)
+      });
+
+      if (res.ok) {
+        window.location.href = "success.html";
+      } else {
+        alert("Registration failed!");
+      }
+    } catch (err) {
+      alert("Server error");
+    }
+  });
+</script>
+
+
+</body>
+</html>
