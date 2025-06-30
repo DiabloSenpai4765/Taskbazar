@@ -1,0 +1,5 @@
+node_modules/
+backend/uploads/
+backend/vendors.json
+backend/customers.json
+backend/bookings.json
