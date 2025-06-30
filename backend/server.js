@@ -8,7 +8,15 @@ const path = require('path');
 
 // Initialize Express app
 const app = express();
-const PORT = 4000;
+// Allow configuration via environment variables with sensible defaults
+const PORT = process.env.PORT || 4000;
+
+// Paths configurable via environment variables
+const FRONTEND_DIR = process.env.FRONTEND_DIR || path.join(__dirname, '..', 'frontend');
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, 'uploads');
+const VENDORS_FILE = process.env.VENDORS_FILE || path.join(__dirname, 'vendors.json');
+const CUSTOMERS_FILE = process.env.CUSTOMERS_FILE || path.join(__dirname, 'customers.json');
+const BOOKINGS_FILE = process.env.BOOKINGS_FILE || path.join(__dirname, 'bookings.json');
 
 // Middleware setup
 app.use(cors());
@@ -17,10 +25,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // --- Static File Serving ---
 // Serve frontend files directly from the 'frontend' directory
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+app.use(express.static(FRONTEND_DIR));
 
 // Directory for uploaded files (e.g., vendor certifications)
-const uploadsDir = path.join(__dirname, 'uploads'); 
+const uploadsDir = UPLOADS_DIR;
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -41,7 +49,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // --- Data Storage (JSON files) ---
-const vendorsFilePath = path.join(__dirname, 'vendors.json');
+const vendorsFilePath = VENDORS_FILE;
 let vendors = []; // In-memory array to hold vendor data
 
 // Function to load vendors from vendors.json
@@ -71,7 +79,7 @@ function loadVendorsFromFile() {
 }
 loadVendorsFromFile(); // Load vendors once when the server starts
 
-const customersFilePath = path.join(__dirname, 'customers.json');
+const customersFilePath = CUSTOMERS_FILE;
 let customers = []; // In-memory array to hold customer data
 
 // Load customers data (similar logic to vendors)
@@ -120,7 +128,7 @@ function saveCustomers() {
 
 // Serve the index.html on root access
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+    res.sendFile(path.join(FRONTEND_DIR, 'index.html'));
 });
 
 // Vendor Registration Endpoint
@@ -256,7 +264,7 @@ app.post('/register-customer', (req, res) => {
 });
 
 // Booking Request Endpoint
-const bookingsFilePath = path.join(__dirname, 'bookings.json');
+const bookingsFilePath = BOOKINGS_FILE;
 let bookings = [];
 
 // Load bookings data
@@ -427,7 +435,7 @@ app.post('/api/vendor/bookings/:bookingId/set-price', (req, res) => {
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
-    console.log(`Serving frontend files from: ${path.resolve(__dirname, '..', 'frontend')}`);
+    console.log(`Serving frontend files from: ${path.resolve(FRONTEND_DIR)}`);
     console.log(`Uploaded files will be stored in '${path.resolve(uploadsDir)}' and accessible via '/uploads' route.`);
     console.log(`Vendors data is managed in: ${path.resolve(vendorsFilePath)}`);
     console.log(`Customers data is managed in: ${path.resolve(customersFilePath)}`);
